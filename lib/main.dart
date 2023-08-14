@@ -126,6 +126,7 @@ class LLMChat extends StatelessWidget {
     this.boxDecorationBasedOnMessage,
     this.messagePadding,
     this.chatPadding,
+    this.loadingWidget,
     super.key,
   });
 
@@ -142,6 +143,7 @@ class LLMChat extends StatelessWidget {
 
   final TextEditingController controller;
   final Function(String) onSubmit;
+  final Widget? loadingWidget;
 
 
 
@@ -168,12 +170,19 @@ class LLMChat extends StatelessWidget {
               if (builder != null) {
                 return messageBuilder!(_messages[i]);
               } else {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: LlmChatMessageItem(
-                    message: _messages[i],
-                    style: _style,
-                  ),
+                return Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: LlmChatMessageItem(
+                        message: _messages[i],
+                        style: _style,
+                      ),
+                    ),
+
+                    if(awaitingResponse)
+                      loadingWidget ?? CircularProgressIndicator()
+                  ],
                 );
               }
             },
