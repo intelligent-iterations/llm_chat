@@ -249,7 +249,7 @@ class LlmChatMessageItem extends StatelessWidget {
     if ('${message.type}' == 'user' || message.type == 'assistant') {
       BoxDecoration decoration = boxDecorationBasedOnMessage == null
           ? BoxDecoration(
-              color: _getColor(), borderRadius: BorderRadius.circular(999))
+              color: _getColor(), borderRadius: BorderRadius.circular(12))
           : boxDecorationBasedOnMessage!(message);
 
       return Align(
