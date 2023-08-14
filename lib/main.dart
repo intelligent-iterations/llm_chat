@@ -145,8 +145,6 @@ class LLMChat extends StatelessWidget {
   final Function(String) onSubmit;
   final Widget? loadingWidget;
 
-
-
   @override
   Widget build(BuildContext context) {
     final _messages = messages.reversed.toList();
@@ -179,8 +177,7 @@ class LLMChat extends StatelessWidget {
                         style: _style,
                       ),
                     ),
-
-                    if(awaitingResponse)
+                    if (awaitingResponse || (_messages.length - 1) == i)
                       loadingWidget ?? CircularProgressIndicator()
                   ],
                 );
