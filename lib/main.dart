@@ -164,15 +164,21 @@ class LLMChat extends StatelessWidget {
             controller: scrollController,
             padding: chatPadding ?? const EdgeInsets.only(bottom: 20),
             itemBuilder: (_, i) {
-
               if (i == 0) {
                 if (awaitingResponse) {
-                  return loadingWidget ?? CircularProgressIndicator();
+                  return loadingWidget ??
+                      Align(
+                        alignment: Alignment.bottomLeft,
+                        child: SizedBox(
+                            height: 14,
+                            width: 23,
+                            child: CircularProgressIndicator()),
+                      );
                 }
-               return Container();
+                return Container();
               }
 
-              i = i-1;
+              i = i - 1;
 
               final builder = messageBuilder;
               if (builder != null) {
@@ -196,8 +202,6 @@ class LLMChat extends StatelessWidget {
             scrollController?.jumpTo(0);
           },
         ),
-
-
       ],
     );
   }
