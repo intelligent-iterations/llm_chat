@@ -168,6 +168,7 @@ class LLMChat extends StatelessWidget {
                 if (awaitingResponse) {
                   return loadingWidget ?? CircularProgressIndicator();
                 }
+               return Container();
               }
 
               final builder = messageBuilder;
