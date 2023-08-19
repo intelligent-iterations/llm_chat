@@ -164,12 +164,15 @@ class LLMChat extends StatelessWidget {
             controller: scrollController,
             padding: chatPadding ?? const EdgeInsets.only(bottom: 20),
             itemBuilder: (_, i) {
-              if (i == _messages.length) {
+
+              if (i == 0) {
                 if (awaitingResponse) {
                   return loadingWidget ?? CircularProgressIndicator();
                 }
                return Container();
               }
+
+              i = i-1;
 
               final builder = messageBuilder;
               if (builder != null) {
