@@ -170,8 +170,8 @@ class LLMChat extends StatelessWidget {
                       Align(
                         alignment: Alignment.bottomLeft,
                         child: SizedBox(
-                            height: 14,
-                            width: 23,
+                            height: 32,
+                            width: 32,
                             child: CircularProgressIndicator()),
                       );
                 }
