@@ -160,26 +160,26 @@ class LLMChat extends StatelessWidget {
         Expanded(
           child: ListView.builder(
             reverse: true,
-            itemCount: _messages.length,
+            itemCount: _messages.length + 1,
             controller: scrollController,
             padding: chatPadding ?? const EdgeInsets.only(bottom: 20),
             itemBuilder: (_, i) {
+              if (i == _messages.length) {
+                if (awaitingResponse) {
+                  return loadingWidget ?? CircularProgressIndicator();
+                }
+              }
+
               final builder = messageBuilder;
               if (builder != null) {
                 return messageBuilder!(_messages[i]);
               } else {
-                return Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: LlmChatMessageItem(
-                        message: _messages[i],
-                        style: _style,
-                      ),
-                    ),
-                    if (awaitingResponse || (_messages.length - 1) == i)
-                      loadingWidget ?? CircularProgressIndicator()
-                  ],
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: LlmChatMessageItem(
+                    message: _messages[i],
+                    style: _style,
+                  ),
                 );
               }
             },
@@ -191,7 +191,9 @@ class LLMChat extends StatelessWidget {
             onSubmit(text);
             scrollController?.jumpTo(0);
           },
-        )
+        ),
+
+
       ],
     );
   }
