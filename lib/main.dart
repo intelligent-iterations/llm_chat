@@ -244,6 +244,7 @@ class _LLmChatTextInputState extends State<LLmChatTextInput> {
           Expanded(
             child: TextField(
               controller: controller,
+              onSubmitted: (_) => submit,
               decoration: InputDecoration(
                 hintText: "Type your message...",
                 border: OutlineInputBorder(
