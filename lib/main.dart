@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:llm_chat/model/llm_chat_message.dart';
 import 'package:llm_chat/model/llm_style.dart';
 
@@ -87,17 +87,13 @@ class _Example extends StatefulWidget {
 
 class _ExampleState extends State<_Example> {
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Column(
         children: [
           Expanded(
             child: LLMChat(
+              showSystemMessage: true,
               scrollController: scrollController,
               awaitingResponse: true,
               messages: chats,
@@ -114,13 +110,14 @@ class _ExampleState extends State<_Example> {
   }
 }
 
-class LLMChat extends StatelessWidget {
+class LLMChat extends StatefulWidget {
   const LLMChat({
     required this.messages,
     required this.awaitingResponse,
     required this.controller,
     required this.onSubmit,
     required this.scrollController,
+    required this.showSystemMessage,
     this.style,
     this.messageBuilder,
     this.boxDecorationBasedOnMessage,
@@ -129,6 +126,8 @@ class LLMChat extends StatelessWidget {
     this.loadingWidget,
     super.key,
   });
+
+  final bool showSystemMessage;
 
   final EdgeInsetsGeometry? messagePadding;
   final EdgeInsetsGeometry? chatPadding;
@@ -146,10 +145,15 @@ class LLMChat extends StatelessWidget {
   final Widget? loadingWidget;
 
   @override
-  Widget build(BuildContext context) {
-    final _messages = messages.reversed.toList();
+  State<LLMChat> createState() => _LLMChatState();
+}
 
-    final _style = style ??
+class _LLMChatState extends State<LLMChat> {
+  @override
+  Widget build(BuildContext context) {
+    final _messages = widget.messages.reversed.toList();
+
+    final _style = widget.style ??
         LlmMessageStyle(
           userColor: Colors.grey,
           assistantColor: Colors.blue,
@@ -161,12 +165,12 @@ class LLMChat extends StatelessWidget {
           child: ListView.builder(
             reverse: true,
             itemCount: _messages.length + 1,
-            controller: scrollController,
-            padding: chatPadding ?? const EdgeInsets.only(bottom: 20),
+            controller: widget.scrollController,
+            padding: widget.chatPadding ?? const EdgeInsets.only(bottom: 20),
             itemBuilder: (_, i) {
               if (i == 0) {
-                if (awaitingResponse) {
-                  return loadingWidget ??
+                if (widget.awaitingResponse) {
+                  return widget.loadingWidget ??
                       Align(
                         alignment: Alignment.bottomLeft,
                         child: SizedBox(
@@ -180,13 +184,17 @@ class LLMChat extends StatelessWidget {
 
               i = i - 1;
 
-              final builder = messageBuilder;
+              final builder = widget.messageBuilder;
               if (builder != null) {
-                return messageBuilder!(_messages[i]);
+                return widget.messageBuilder!(_messages[i]);
               } else {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: LlmChatMessageItem(
+                    showSystemMessage: widget.showSystemMessage,
+                    boxDecorationBasedOnMessage:
+                        widget.boxDecorationBasedOnMessage,
+                    messagePadding: widget.messagePadding,
                     message: _messages[i],
                     style: _style,
                   ),
@@ -196,10 +204,10 @@ class LLMChat extends StatelessWidget {
           ),
         ),
         LLmChatTextInput(
-          controller: controller,
+          controller: widget.controller,
           onSubmit: (text) {
-            onSubmit(text);
-            scrollController?.jumpTo(0);
+            widget.onSubmit(text);
+            widget.scrollController?.jumpTo(0);
           },
         ),
       ],
@@ -207,7 +215,7 @@ class LLMChat extends StatelessWidget {
   }
 }
 
-class LLmChatTextInput extends StatelessWidget {
+class LLmChatTextInput extends StatefulWidget {
   const LLmChatTextInput({
     required this.controller,
     required this.onSubmit,
@@ -216,6 +224,16 @@ class LLmChatTextInput extends StatelessWidget {
 
   final TextEditingController controller;
   final Function(String) onSubmit;
+
+  @override
+  State<LLmChatTextInput> createState() => _LLmChatTextInputState();
+}
+
+class _LLmChatTextInputState extends State<LLmChatTextInput> {
+  void submit() {
+    widget.onSubmit(widget.controller.text);
+    widget.controller.clear();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -236,10 +254,7 @@ class LLmChatTextInput extends StatelessWidget {
           ),
           IconButton(
             icon: Icon(Icons.send),
-            onPressed: () {
-              onSubmit(controller.text);
-              controller.clear();
-            },
+            onPressed: submit,
           )
         ],
       ),
@@ -253,8 +268,10 @@ class LlmChatMessageItem extends StatelessWidget {
     this.messagePadding,
     required this.message,
     required this.style,
+    required this.showSystemMessage,
   });
 
+  final bool showSystemMessage;
   final LlmMessageStyle style;
   final LlmChatMessage message;
   final BoxDecoration Function(LlmChatMessage)? boxDecorationBasedOnMessage;
@@ -262,13 +279,22 @@ class LlmChatMessageItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if ('${message.type}' == 'user' || message.type == 'assistant') {
-      BoxDecoration decoration = boxDecorationBasedOnMessage == null
-          ? BoxDecoration(
-              color: _getColor(), borderRadius: BorderRadius.circular(12))
-          : boxDecorationBasedOnMessage!(message);
+    if (message.type == 'system') {
+      if (!showSystemMessage) {
+        return Container();
+      }
+    }
 
-      return Align(
+    final isSystem = message.type == 'system';
+
+    BoxDecoration decoration = boxDecorationBasedOnMessage == null
+        ? BoxDecoration(
+            color: _getColor(), borderRadius: BorderRadius.circular(12))
+        : boxDecorationBasedOnMessage!(message);
+
+    return Opacity(
+      opacity: message.type == 'system' ? .5 : 1.0,
+      child: Align(
         alignment: message.type == 'user'
             ? Alignment.bottomRight
             : Alignment.bottomLeft,
@@ -279,14 +305,22 @@ class LlmChatMessageItem extends StatelessWidget {
                 horizontal: 20,
               ),
           decoration: decoration,
-          child: Text(
-            '${message.message}',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (isSystem)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Text('System'),
+                ),
+              Text(
+                '${message.message}',
+              ),
+            ],
           ),
         ),
-      );
-    } else {
-      return Container();
-    }
+      ),
+    );
   }
 
   Color _getColor() {
