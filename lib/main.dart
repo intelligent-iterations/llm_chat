@@ -243,7 +243,7 @@ class _LLmChatTextInputState extends State<LLmChatTextInput> {
         children: [
           Expanded(
             child: TextField(
-              controller: controller,
+              controller: widget.controller,
               onSubmitted: (_) => submit(),
               decoration: InputDecoration(
                 hintText: "Type your message...",
