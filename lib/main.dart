@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:llm_chat/model/llm_chat_message.dart';
@@ -88,11 +87,15 @@ class _Example extends StatefulWidget {
 class _ExampleState extends State<_Example> {
   @override
   Widget build(BuildContext context) {
+    final t = TextStyle(color: Colors.white);
     return Scaffold(
       body: Column(
         children: [
           Expanded(
             child: LLMChat(
+              style: LlmMessageStyle(
+                  userColor: Color(0xff9E9EA5),
+                  assistantColor: Colors.greenAccent),
               showSystemMessage: true,
               scrollController: scrollController,
               awaitingResponse: true,
@@ -166,17 +169,15 @@ class _LLMChatState extends State<LLMChat> {
             reverse: true,
             itemCount: _messages.length + 1,
             controller: widget.scrollController,
-            padding: widget.chatPadding ?? const EdgeInsets.only(bottom: 20),
+            padding: widget.chatPadding ??
+                EdgeInsets.symmetric(horizontal: 18, vertical: 8),
             itemBuilder: (_, i) {
               if (i == 0) {
                 if (widget.awaitingResponse) {
                   return widget.loadingWidget ??
-                      Align(
-                        alignment: Alignment.bottomLeft,
-                        child: SizedBox(
-                            height: 32,
-                            width: 32,
-                            child: CircularProgressIndicator()),
+                      TypingIndicator(
+                        assistantColor:
+                            widget.style?.assistantColor ?? Colors.blue,
                       );
                 }
                 return Container();
@@ -204,6 +205,9 @@ class _LLMChatState extends State<LLMChat> {
           ),
         ),
         LLmChatTextInput(
+          background: widget.style?.inputBoxColor,
+          icon: widget.style?.sendIcon,
+          textStyle: widget.style?.inputTextStyle,
           controller: widget.controller,
           onSubmit: (text) {
             widget.onSubmit(text);
@@ -220,10 +224,16 @@ class LLmChatTextInput extends StatefulWidget {
     required this.controller,
     required this.onSubmit,
     super.key,
+    this.textStyle,
+    this.icon,
+    this.background,
   });
 
   final TextEditingController controller;
   final Function(String) onSubmit;
+  final TextStyle? textStyle;
+  final Widget? icon;
+  final Color? background;
 
   @override
   State<LLmChatTextInput> createState() => _LLmChatTextInputState();
@@ -235,26 +245,42 @@ class _LLmChatTextInputState extends State<LLmChatTextInput> {
     widget.controller.clear();
   }
 
+  late final _focusNode = FocusNode(
+    onKey: (FocusNode node, RawKeyEvent evt) {
+      if (!evt.isShiftPressed && evt.logicalKey.keyLabel == 'Enter') {
+        if (evt is RawKeyDownEvent) {
+          submit();
+        }
+        return KeyEventResult.handled;
+      } else {
+        return KeyEventResult.ignored;
+      }
+    },
+  );
+
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+    return Container(
+      color: widget.background ?? Color(0xff9E9EA5),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 18),
       child: Row(
         children: [
           Expanded(
             child: TextField(
+              style: widget.textStyle,
+              maxLines: null,
+              keyboardType: TextInputType.multiline,
+              focusNode: _focusNode,
               controller: widget.controller,
               onSubmitted: (_) => submit(),
               decoration: InputDecoration(
-                hintText: "Type your message...",
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
+                  hintText: "Type your message...",
+                  border: InputBorder.none,
+                  hintStyle: widget.textStyle),
             ),
           ),
           IconButton(
-            icon: Icon(Icons.send),
+            icon: widget.icon ?? const Icon(Icons.send),
             onPressed: submit,
           )
         ],
@@ -293,32 +319,32 @@ class LlmChatMessageItem extends StatelessWidget {
             color: _getColor(), borderRadius: BorderRadius.circular(12))
         : boxDecorationBasedOnMessage!(message);
 
-    return Opacity(
-      opacity: message.type == 'system' ? .5 : 1.0,
-      child: Align(
-        alignment: message.type == 'user'
-            ? Alignment.bottomRight
-            : Alignment.bottomLeft,
-        child: Container(
-          padding: messagePadding ??
-              EdgeInsets.symmetric(
-                vertical: 20,
-                horizontal: 20,
-              ),
-          decoration: decoration,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (isSystem)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Text('System'),
+    return Align(
+      alignment:
+          message.type == 'user' ? Alignment.bottomRight : Alignment.bottomLeft,
+      child: Container(
+        padding: messagePadding ??
+            EdgeInsets.symmetric(
+              vertical: 20,
+              horizontal: 20,
+            ),
+        decoration: decoration,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (isSystem)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Text(
+                  'System',
+                  style: style.systemTextStyle,
                 ),
-              Text(
-                '${message.message}',
               ),
-            ],
-          ),
+            Text(
+              style: _getTextStyle(),
+              '${message.message}',
+            ),
+          ],
         ),
       ),
     );
@@ -328,8 +354,95 @@ class LlmChatMessageItem extends StatelessWidget {
     switch (message.type) {
       case 'user':
         return style.userColor;
+      case 'system':
+        return style.systemColor ?? style.assistantColor.withOpacity(.5);
       default:
         return style.assistantColor;
     }
+  }
+
+  TextStyle? _getTextStyle() {
+    switch (message.type) {
+      case 'user':
+        return style.userTextStyle;
+      case 'system':
+        return style.systemTextStyle;
+      default:
+        return style.assistantTextStyle;
+    }
+  }
+}
+
+class TypingIndicator extends StatefulWidget {
+  const TypingIndicator({required this.assistantColor, super.key});
+
+  final Color assistantColor;
+
+  @override
+  _TypingIndicatorState createState() => _TypingIndicatorState();
+}
+
+class _TypingIndicatorState extends State<TypingIndicator> {
+  List<double> _opacities = [0.0, 0.0, 0.0];
+
+  @override
+  void initState() {
+    super.initState();
+    _animateDots();
+  }
+
+  void _animateDots() async {
+    const duration = Duration(milliseconds: 200);
+    while (true) {
+      await Future.delayed(duration);
+      setState(() {
+        _opacities = [1.0, 0.0, 0.0];
+      });
+      await Future.delayed(duration);
+      setState(() {
+        _opacities = [1.0, 1.0, 0.0];
+      });
+      await Future.delayed(duration);
+      setState(() {
+        _opacities = [1.0, 1.0, 1.0];
+      });
+      await Future.delayed(duration);
+      setState(() {
+        _opacities = [0.0, 0.0, 0.0];
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        Container(
+          padding: EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.grey[300],
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            children: List.generate(
+              3,
+              (index) => AnimatedContainer(
+                duration: Duration(milliseconds: 300),
+                margin: EdgeInsets.symmetric(horizontal: 3),
+                height: 8,
+                width: 8,
+                decoration: BoxDecoration(
+                  color: _opacities[index] > 0.5
+                      ? widget.assistantColor
+                      : Colors.grey,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
