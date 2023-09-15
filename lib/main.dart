@@ -205,6 +205,7 @@ class _LLMChatState extends State<LLMChat> {
           ),
         ),
         LLmChatTextInput(
+          inputPadding: widget.style?.inputPadding,
           background: widget.style?.inputBoxColor,
           icon: widget.style?.sendIcon,
           textStyle: widget.style?.inputTextStyle,
@@ -227,6 +228,7 @@ class LLmChatTextInput extends StatefulWidget {
     this.textStyle,
     this.icon,
     this.background,
+    this.inputPadding,
   });
 
   final TextEditingController controller;
@@ -234,6 +236,7 @@ class LLmChatTextInput extends StatefulWidget {
   final TextStyle? textStyle;
   final Widget? icon;
   final Color? background;
+  final EdgeInsets? inputPadding;
 
   @override
   State<LLmChatTextInput> createState() => _LLmChatTextInputState();
@@ -262,7 +265,8 @@ class _LLmChatTextInputState extends State<LLmChatTextInput> {
   Widget build(BuildContext context) {
     return Container(
       color: widget.background ?? Color(0xff9E9EA5),
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 18),
+      padding: widget.inputPadding ??
+          const EdgeInsets.symmetric(vertical: 12, horizontal: 18),
       child: Row(
         children: [
           Expanded(

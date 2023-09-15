@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 class LlmMessageStyle {
   const LlmMessageStyle({
+    this.inputPadding,
     this.sendIcon,
     this.userTextStyle,
     this.assistantTextStyle,
@@ -22,4 +23,5 @@ class LlmMessageStyle {
   final Color? systemColor;
   final Color? inputBoxColor;
   final Widget? sendIcon;
+  final EdgeInsets? inputPadding;
 }
