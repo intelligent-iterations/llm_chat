@@ -344,7 +344,7 @@ class LlmChatMessageItem extends StatelessWidget {
                   style: style.systemTextStyle,
                 ),
               ),
-            Text(
+            SelectableText(
               style: _getTextStyle(),
               '${message.message}',
             ),
