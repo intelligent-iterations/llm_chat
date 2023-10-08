@@ -354,7 +354,6 @@ class LlmChatMessageItem extends StatelessWidget {
                   style: _getTextStyle(),
                   '${message.message}',
                 ),
-                if (isAssistant) SizedBox(width: 8),
                 if (isAssistant)
                   CopyToClipboardIcon(
                     iconColor: style.assistantTextStyle?.color ?? Colors.black,
