@@ -1,3 +1,4 @@
+import 'package:clipboard/clipboard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:llm_chat/model/llm_chat_message.dart';
@@ -94,8 +95,9 @@ class _ExampleState extends State<_Example> {
           Expanded(
             child: LLMChat(
               style: LlmMessageStyle(
+                  assistantTextStyle: TextStyle(color: Colors.white),
                   userColor: Color(0xff9E9EA5),
-                  assistantColor: Colors.greenAccent),
+                  assistantColor: Colors.deepPurple),
               showSystemMessage: true,
               scrollController: scrollController,
               awaitingResponse: true,
@@ -317,6 +319,7 @@ class LlmChatMessageItem extends StatelessWidget {
     }
 
     final isSystem = message.type == 'system';
+    final isAssistant = message.type == 'assistant';
 
     BoxDecoration decoration = boxDecorationBasedOnMessage == null
         ? BoxDecoration(
@@ -344,9 +347,20 @@ class LlmChatMessageItem extends StatelessWidget {
                   style: style.systemTextStyle,
                 ),
               ),
-            SelectableText(
-              style: _getTextStyle(),
-              '${message.message}',
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SelectableText(
+                  style: _getTextStyle(),
+                  '${message.message}',
+                ),
+                if (isAssistant) SizedBox(width: 8),
+                if (isAssistant)
+                  CopyToClipboardIcon(
+                    iconColor: style.assistantTextStyle?.color ?? Colors.black,
+                    textToCopy: message.message ?? '',
+                  ),
+              ],
             ),
           ],
         ),
@@ -447,6 +461,58 @@ class _TypingIndicatorState extends State<TypingIndicator> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class CopyToClipboardIcon extends StatefulWidget {
+  final String textToCopy;
+  final Color iconColor;
+
+  CopyToClipboardIcon({required this.textToCopy, required this.iconColor});
+
+  @override
+  _CopyToClipboardIconState createState() => _CopyToClipboardIconState();
+}
+
+class _CopyToClipboardIconState extends State<CopyToClipboardIcon> {
+  bool _isCopied = false;
+
+  void _copyText() async {
+    await FlutterClipboard.copy(widget.textToCopy);
+    if (!_isCopied) {
+      setState(() {
+        _isCopied = true;
+      });
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) {
+          setState(() {
+            _isCopied = false;
+          });
+        }
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      icon: AnimatedCrossFade(
+        firstChild: Icon(
+          Icons.paste_rounded,
+          size: 18,
+          color: widget.iconColor,
+        ),
+        secondChild: Icon(
+          Icons.check,
+          size: 18,
+          color: widget.iconColor,
+        ),
+        crossFadeState:
+            _isCopied ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+        duration: Duration(milliseconds: 100),
+      ),
+      onPressed: _copyText,
     );
   }
 }
