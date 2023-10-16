@@ -58,7 +58,8 @@ List<LlmChatMessage> chats = [
   ),
   LlmChatMessage(
     time: DateTime.now().millisecondsSinceEpoch - 1000,
-    message: "Of course! Please go ahead and last",
+    message:
+        " , Of course! Please go ahead and last , Of course! Please go ahead and last , Of course! Please go ahead and last , Of course! Please go ahead and last , Of course! Please go ahead and last , Of course! Please go ahead and last , Of course! Please go ahead and last , Of course! Please go ahead and last , Of course! Please go ahead and last , Of course! Please go ahead and last , Of course! Please go ahead and last , Of course! Please go ahead and last , Of course! Please go ahead and last , Of course! Please go ahead and last , Of course! Please go ahead and last , Of course! Please go ahead and last , Of course! Please go ahead and last",
     type: "assistant",
   ),
 ];
@@ -338,10 +339,7 @@ class LlmChatMessageItem extends StatelessWidget {
           message.type == 'user' ? Alignment.bottomRight : Alignment.bottomLeft,
       child: Container(
         padding: messagePadding ??
-            EdgeInsets.symmetric(
-              vertical: 20,
-              horizontal: 20,
-            ),
+            EdgeInsets.only(top: 8, bottom: 12, left: 18, right: 18),
         decoration: decoration,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -354,6 +352,7 @@ class LlmChatMessageItem extends StatelessWidget {
                   style: style.systemTextStyle,
                 ),
               ),
+<<<<<<< HEAD
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -379,6 +378,39 @@ class LlmChatMessageItem extends StatelessWidget {
                     textToCopy: message.message ?? '',
                   ),
               ],
+=======
+            Container(
+              // width: 500,
+              child: LayoutBuilder(builder: (context, constraints) {
+                return Stack(
+                  // crossAxisAlignment: CrossAxisAlignment.start,
+                  // mainAxisSize: MainAxisSize.min,
+                  fit: StackFit.loose,
+                  children: [
+                    if (isAssistant)
+                      Container(
+                        child: CopyToClipboardIcon(
+                          iconColor:
+                              style.assistantTextStyle?.color ?? Colors.black,
+                          textToCopy: message.message ?? '',
+                        ),
+                      ),
+                    if (isAssistant) SizedBox(height: 24),
+                    Container(
+                      padding: EdgeInsets.only(
+                          top: isAssistant ? 50 : 12,
+                          bottom: 8,
+                          left: 0,
+                          right: 0),
+                      child: SelectableText(
+                        style: _getTextStyle(),
+                        '${message.message}',
+                      ),
+                    ),
+                  ],
+                );
+              }),
+>>>>>>> f4f6d18711765c232059ff70476f0f4eea129728
             ),
           ],
         ),
@@ -428,6 +460,9 @@ class _TypingIndicatorState extends State<TypingIndicator> {
   }
 
   void _animateDots() async {
+    if (!mounted) {
+      return;
+    }
     const duration = Duration(milliseconds: 200);
     while (true) {
       await Future.delayed(duration);
