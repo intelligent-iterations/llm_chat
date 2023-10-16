@@ -1,3 +1,4 @@
+import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:clipboard/clipboard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -195,6 +196,10 @@ class _LLMChatState extends State<LLMChat> {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: LlmChatMessageItem(
+                    isLastMessage: _messages[i].type == 'assistant' &&
+                        !_messages
+                            .sublist(0, i)
+                            .any((msg) => msg.type == 'assistant'),
                     showSystemMessage: widget.showSystemMessage,
                     boxDecorationBasedOnMessage:
                         widget.boxDecorationBasedOnMessage,
@@ -303,6 +308,7 @@ class LlmChatMessageItem extends StatelessWidget {
     required this.message,
     required this.style,
     required this.showSystemMessage,
+    required this.isLastMessage,
   });
 
   final bool showSystemMessage;
@@ -310,6 +316,7 @@ class LlmChatMessageItem extends StatelessWidget {
   final LlmChatMessage message;
   final BoxDecoration Function(LlmChatMessage)? boxDecorationBasedOnMessage;
   final EdgeInsetsGeometry? messagePadding;
+  final bool isLastMessage;
 
   @override
   Widget build(BuildContext context) {
@@ -362,17 +369,29 @@ class LlmChatMessageItem extends StatelessWidget {
                         ),
                       ),
                     if (isAssistant) SizedBox(height: 24),
-                    Container(
-                      padding: EdgeInsets.only(
-                          top: isAssistant ? 50 : 12,
-                          bottom: 8,
-                          left: 0,
-                          right: 0),
-                      child: SelectableText(
-                        style: _getTextStyle(),
-                        '${message.message}',
-                      ),
-                    ),
+                    isAssistant && isLastMessage
+                        ? DefaultTextStyle(
+                            style: style.assistantTextStyle ?? TextStyle(),
+                            child: AnimatedTextKit(
+                              displayFullTextOnTap: true,
+                              isRepeatingAnimation: false,
+                              totalRepeatCount: 1,
+                              animatedTexts: [
+                                TyperAnimatedText(message.message?.trim() ?? '')
+                              ],
+                            ),
+                          )
+                        : Container(
+                            padding: EdgeInsets.only(
+                                top: isAssistant ? 50 : 12,
+                                bottom: 8,
+                                left: 0,
+                                right: 0),
+                            child: SelectableText(
+                              style: _getTextStyle(),
+                              '${message.message}',
+                            ),
+                          ),
                   ],
                 );
               }),
