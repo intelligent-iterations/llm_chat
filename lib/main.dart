@@ -1,3 +1,4 @@
+import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:clipboard/clipboard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -194,6 +195,10 @@ class _LLMChatState extends State<LLMChat> {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: LlmChatMessageItem(
+                    islatestResponse: _messages[i].type == 'assistant' &&
+                        !_messages
+                            .sublist(0, i)
+                            .any((msg) => msg.type == 'assistant'),
                     showSystemMessage: widget.showSystemMessage,
                     boxDecorationBasedOnMessage:
                         widget.boxDecorationBasedOnMessage,
@@ -302,6 +307,7 @@ class LlmChatMessageItem extends StatelessWidget {
     required this.message,
     required this.style,
     required this.showSystemMessage,
+    required this.islatestResponse,
   });
 
   final bool showSystemMessage;
@@ -309,6 +315,7 @@ class LlmChatMessageItem extends StatelessWidget {
   final LlmChatMessage message;
   final BoxDecoration Function(LlmChatMessage)? boxDecorationBasedOnMessage;
   final EdgeInsetsGeometry? messagePadding;
+  final bool islatestResponse;
 
   @override
   Widget build(BuildContext context) {
@@ -350,10 +357,22 @@ class LlmChatMessageItem extends StatelessWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                SelectableText(
-                  style: _getTextStyle(),
-                  '${message.message}',
-                ),
+                isAssistant && islatestResponse
+                    ? DefaultTextStyle(
+                        style: style.assistantTextStyle ?? TextStyle(),
+                        child: AnimatedTextKit(
+                          displayFullTextOnTap: true,
+                          isRepeatingAnimation: false,
+                          totalRepeatCount: 1,
+                          animatedTexts: [
+                            TyperAnimatedText(message.message?.trim() ?? '')
+                          ],
+                        ),
+                      )
+                    : SelectableText(
+                        style: _getTextStyle(),
+                        '${message.message}',
+                      ),
                 if (isAssistant)
                   CopyToClipboardIcon(
                     iconColor: style.assistantTextStyle?.color ?? Colors.black,
