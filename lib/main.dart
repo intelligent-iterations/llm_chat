@@ -369,29 +369,30 @@ class LlmChatMessageItem extends StatelessWidget {
                         ),
                       ),
                     if (isAssistant) SizedBox(height: 24),
-                    isAssistant && isLastMessage
-                        ? DefaultTextStyle(
-                            style: style.assistantTextStyle ?? TextStyle(),
-                            child: AnimatedTextKit(
-                              displayFullTextOnTap: true,
-                              isRepeatingAnimation: false,
-                              totalRepeatCount: 1,
-                              animatedTexts: [
-                                TyperAnimatedText(message.message?.trim() ?? '')
-                              ],
-                            ),
-                          )
-                        : Container(
-                            padding: EdgeInsets.only(
-                                top: isAssistant ? 50 : 12,
-                                bottom: 8,
-                                left: 0,
-                                right: 0),
-                            child: SelectableText(
+                    Container(
+                      padding: EdgeInsets.only(
+                          top: isAssistant ? 50 : 12,
+                          bottom: 8,
+                          left: 0,
+                          right: 0),
+                      child: isAssistant && isLastMessage
+                          ? DefaultTextStyle(
+                              style: style.assistantTextStyle ?? TextStyle(),
+                              child: AnimatedTextKit(
+                                displayFullTextOnTap: true,
+                                isRepeatingAnimation: false,
+                                totalRepeatCount: 1,
+                                animatedTexts: [
+                                  TyperAnimatedText(
+                                      message.message?.trim() ?? '')
+                                ],
+                              ),
+                            )
+                          : SelectableText(
                               style: _getTextStyle(),
                               '${message.message}',
                             ),
-                          ),
+                    ),
                   ],
                 );
               }),
