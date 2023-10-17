@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:clipboard/clipboard.dart';
 import 'package:flutter/material.dart';
@@ -88,6 +90,19 @@ class _Example extends StatefulWidget {
 }
 
 class _ExampleState extends State<_Example> {
+  final _chatStreamController = StreamController<LlmChatMessage>.broadcast();
+
+  Stream<LlmChatMessage> get chatStream => _chatStreamController.stream;
+
+  void addMessageToStream(LlmChatMessage message) {
+    _chatStreamController.add(message);
+  }
+
+  void dispose() {
+    _chatStreamController.close();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = TextStyle(color: Colors.white);
@@ -96,6 +111,7 @@ class _ExampleState extends State<_Example> {
         children: [
           Expanded(
             child: LLMChat(
+              chatStreamController: _chatStreamController,
               style: LlmMessageStyle(
                   assistantTextStyle: TextStyle(color: Colors.white),
                   userColor: Color(0xff9E9EA5),
@@ -106,7 +122,7 @@ class _ExampleState extends State<_Example> {
               messages: chats,
               controller: controller,
               onSubmit: (newMessage) {
-                chats.add(LlmChatMessage.user(message: newMessage));
+                addMessageToStream(LlmChatMessage.user(message: newMessage));
                 setState(() {});
               },
             ),
@@ -132,6 +148,7 @@ class LLMChat extends StatefulWidget {
     this.chatPadding,
     this.loadingWidget,
     super.key,
+    required this.chatStreamController,
   });
 
   final bool showSystemMessage;
@@ -150,12 +167,15 @@ class LLMChat extends StatefulWidget {
   final TextEditingController controller;
   final Function(String) onSubmit;
   final Widget? loadingWidget;
+  final StreamController<LlmChatMessage> chatStreamController;
 
   @override
   State<LLMChat> createState() => _LLMChatState();
 }
 
 class _LLMChatState extends State<LLMChat> {
+  Stream<LlmChatMessage> get chatStream => widget.chatStreamController.stream;
+
   @override
   Widget build(BuildContext context) {
     final _messages = widget.messages.reversed.toList();
@@ -224,79 +244,6 @@ class _LLMChatState extends State<LLMChat> {
           },
         ),
       ],
-    );
-  }
-}
-
-class LLmChatTextInput extends StatefulWidget {
-  const LLmChatTextInput({
-    required this.controller,
-    required this.onSubmit,
-    super.key,
-    this.textStyle,
-    this.icon,
-    this.background,
-    this.inputPadding,
-  });
-
-  final TextEditingController controller;
-  final Function(String) onSubmit;
-  final TextStyle? textStyle;
-  final Widget? icon;
-  final Color? background;
-  final EdgeInsets? inputPadding;
-
-  @override
-  State<LLmChatTextInput> createState() => _LLmChatTextInputState();
-}
-
-class _LLmChatTextInputState extends State<LLmChatTextInput> {
-  void submit() {
-    widget.onSubmit(widget.controller.text);
-    widget.controller.clear();
-  }
-
-  late final _focusNode = FocusNode(
-    onKey: (FocusNode node, RawKeyEvent evt) {
-      if (!evt.isShiftPressed && evt.logicalKey.keyLabel == 'Enter') {
-        if (evt is RawKeyDownEvent) {
-          submit();
-        }
-        return KeyEventResult.handled;
-      } else {
-        return KeyEventResult.ignored;
-      }
-    },
-  );
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: widget.background ?? Color(0xff9E9EA5),
-      padding: widget.inputPadding ??
-          const EdgeInsets.symmetric(vertical: 12, horizontal: 18),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              style: widget.textStyle,
-              maxLines: null,
-              keyboardType: TextInputType.multiline,
-              focusNode: _focusNode,
-              controller: widget.controller,
-              onSubmitted: (_) => submit(),
-              decoration: InputDecoration(
-                  hintText: "Type your message...",
-                  border: InputBorder.none,
-                  hintStyle: widget.textStyle),
-            ),
-          ),
-          IconButton(
-            icon: widget.icon ?? const Icon(Icons.send),
-            onPressed: submit,
-          )
-        ],
-      ),
     );
   }
 }
@@ -379,7 +326,6 @@ class LlmChatMessageItem extends StatelessWidget {
                           ? DefaultTextStyle(
                               style: style.assistantTextStyle ?? TextStyle(),
                               child: AnimatedTextKit(
-                                displayFullTextOnTap: true,
                                 isRepeatingAnimation: false,
                                 totalRepeatCount: 1,
                                 animatedTexts: [
@@ -423,6 +369,79 @@ class LlmChatMessageItem extends StatelessWidget {
       default:
         return style.assistantTextStyle;
     }
+  }
+}
+
+class LLmChatTextInput extends StatefulWidget {
+  const LLmChatTextInput({
+    required this.controller,
+    required this.onSubmit,
+    super.key,
+    this.textStyle,
+    this.icon,
+    this.background,
+    this.inputPadding,
+  });
+
+  final TextEditingController controller;
+  final Function(String) onSubmit;
+  final TextStyle? textStyle;
+  final Widget? icon;
+  final Color? background;
+  final EdgeInsets? inputPadding;
+
+  @override
+  State<LLmChatTextInput> createState() => _LLmChatTextInputState();
+}
+
+class _LLmChatTextInputState extends State<LLmChatTextInput> {
+  void submit() {
+    widget.onSubmit(widget.controller.text);
+    widget.controller.clear();
+  }
+
+  late final _focusNode = FocusNode(
+    onKey: (FocusNode node, RawKeyEvent evt) {
+      if (!evt.isShiftPressed && evt.logicalKey.keyLabel == 'Enter') {
+        if (evt is RawKeyDownEvent) {
+          submit();
+        }
+        return KeyEventResult.handled;
+      } else {
+        return KeyEventResult.ignored;
+      }
+    },
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: widget.background ?? Color(0xff9E9EA5),
+      padding: widget.inputPadding ??
+          const EdgeInsets.symmetric(vertical: 12, horizontal: 18),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              style: widget.textStyle,
+              maxLines: null,
+              keyboardType: TextInputType.multiline,
+              focusNode: _focusNode,
+              controller: widget.controller,
+              onSubmitted: (_) => submit(),
+              decoration: InputDecoration(
+                  hintText: "Type your message...",
+                  border: InputBorder.none,
+                  hintStyle: widget.textStyle),
+            ),
+          ),
+          IconButton(
+            icon: widget.icon ?? const Icon(Icons.send),
+            onPressed: submit,
+          )
+        ],
+      ),
+    );
   }
 }
 
