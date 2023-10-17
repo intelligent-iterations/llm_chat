@@ -191,17 +191,14 @@ class _LLMChatState extends State<LLMChat> {
             stream: widget.chatStreamController.stream,
             builder: (context, snapshot) {
               if (snapshot.hasData) {
-                Map<String, dynamic> data = snapshot.data ?? {};
+                Map<String, dynamic> data = snapshot.data!;
                 int indexToUpdate = data['index'] as int? ?? -1;
                 LlmChatMessage updatedMessage =
                     data['message'] as LlmChatMessage;
 
-                // Ensure that we have a valid index
                 if (indexToUpdate >= 0 &&
                     indexToUpdate < widget.messages.length) {
-                  setState(() {
-                    widget.messages[indexToUpdate] = updatedMessage;
-                  });
+                  widget.messages[indexToUpdate] = updatedMessage;
                 }
               }
 
