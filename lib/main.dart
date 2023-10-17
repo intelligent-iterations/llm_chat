@@ -174,12 +174,8 @@ class LLMChat extends StatefulWidget {
 }
 
 class _LLMChatState extends State<LLMChat> {
-  Stream<LlmChatMessage> get chatStream => widget.chatStreamController.stream;
-
   @override
   Widget build(BuildContext context) {
-    final _messages = widget.messages.reversed.toList();
-
     final _style = widget.style ??
         LlmMessageStyle(
           userColor: Colors.grey,
@@ -189,46 +185,70 @@ class _LLMChatState extends State<LLMChat> {
     return Column(
       children: [
         Expanded(
-          child: ListView.builder(
-            reverse: true,
-            itemCount: _messages.length + 1,
-            controller: widget.scrollController,
-            padding: widget.chatPadding ??
-                EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-            itemBuilder: (_, i) {
-              if (i == 0) {
-                if (widget.awaitingResponse) {
-                  return widget.loadingWidget ??
-                      TypingIndicator(
-                        assistantColor:
-                            widget.style?.assistantColor ?? Colors.blue,
-                      );
-                }
-                return Container();
-              }
+          child: StreamBuilder<LlmChatMessage>(
+            stream: widget.chatStreamController.stream,
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                // Get the current message from the stream
+                LlmChatMessage updatedMessage = snapshot.data!;
 
-              i = i - 1;
-
-              final builder = widget.messageBuilder;
-              if (builder != null) {
-                return widget.messageBuilder!(_messages[i]);
-              } else {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: LlmChatMessageItem(
-                    isLastMessage: _messages[i].type == 'assistant' &&
-                        !_messages
-                            .sublist(0, i)
-                            .any((msg) => msg.type == 'assistant'),
-                    showSystemMessage: widget.showSystemMessage,
-                    boxDecorationBasedOnMessage:
-                        widget.boxDecorationBasedOnMessage,
-                    messagePadding: widget.messagePadding,
-                    message: _messages[i],
-                    style: _style,
-                  ),
+                // Find the index of the assistant message that needs updating
+                int indexToUpdate = widget.messages.indexWhere(
+                  (message) =>
+                      message.type == 'assistant' && message.message == '',
                 );
+
+                if (indexToUpdate != -1) {
+                  // Update the message in the list
+                  setState(() {
+                    widget.messages[indexToUpdate] = updatedMessage;
+                  });
+                }
               }
+
+              final _messages = widget.messages.reversed.toList();
+              return ListView.builder(
+                reverse: true,
+                itemCount: _messages.length + 1,
+                controller: widget.scrollController,
+                padding: widget.chatPadding ??
+                    EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                itemBuilder: (_, i) {
+                  if (i == 0) {
+                    if (widget.awaitingResponse) {
+                      return widget.loadingWidget ??
+                          TypingIndicator(
+                            assistantColor:
+                                widget.style?.assistantColor ?? Colors.blue,
+                          );
+                    }
+                    return Container();
+                  }
+
+                  i = i - 1;
+
+                  final builder = widget.messageBuilder;
+                  if (builder != null) {
+                    return widget.messageBuilder!(_messages[i]);
+                  } else {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: LlmChatMessageItem(
+                        isLastMessage: _messages[i].type == 'assistant' &&
+                            !_messages
+                                .sublist(0, i)
+                                .any((msg) => msg.type == 'assistant'),
+                        showSystemMessage: widget.showSystemMessage,
+                        boxDecorationBasedOnMessage:
+                            widget.boxDecorationBasedOnMessage,
+                        messagePadding: widget.messagePadding,
+                        message: _messages[i],
+                        style: _style,
+                      ),
+                    );
+                  }
+                },
+              );
             },
           ),
         ),
