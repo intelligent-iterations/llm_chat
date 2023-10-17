@@ -166,6 +166,22 @@ class _LLMChatState extends State<LLMChat> {
           assistantColor: Colors.blue,
         );
 
+    bool isLatestAssistantMessage(int i) {
+      final latestAssistantIndex =
+          _messages.lastIndexWhere((m) => m.type == 'assistant');
+
+      if (latestAssistantIndex == -1) {
+        return true;
+      }
+
+      final latestAssistantTime = DateTime.fromMillisecondsSinceEpoch(
+          _messages[latestAssistantIndex].time ?? 0);
+      final currentMessageTime =
+          DateTime.fromMillisecondsSinceEpoch(_messages[i].time ?? 0);
+
+      return !latestAssistantTime.isAfter(currentMessageTime);
+    }
+
     return Column(
       children: [
         Expanded(
@@ -197,9 +213,7 @@ class _LLMChatState extends State<LLMChat> {
                   padding: const EdgeInsets.only(bottom: 8),
                   child: LlmChatMessageItem(
                     isLastMessage: _messages[i].type == 'assistant' &&
-                        !_messages
-                            .sublist(0, i)
-                            .any((msg) => msg.type == 'assistant'),
+                        isLatestAssistantMessage(i),
                     showSystemMessage: widget.showSystemMessage,
                     boxDecorationBasedOnMessage:
                         widget.boxDecorationBasedOnMessage,
