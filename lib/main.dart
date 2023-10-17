@@ -1,4 +1,3 @@
-import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:clipboard/clipboard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -166,21 +165,21 @@ class _LLMChatState extends State<LLMChat> {
           assistantColor: Colors.blue,
         );
 
-    bool isLatestAssistantMessage(int i) {
-      final latestAssistantIndex =
-          _messages.lastIndexWhere((m) => m.type == 'assistant');
-
-      if (latestAssistantIndex == -1) {
-        return true;
-      }
-
-      final latestAssistantTime = DateTime.fromMillisecondsSinceEpoch(
-          _messages[latestAssistantIndex].time ?? 0);
-      final currentMessageTime =
-          DateTime.fromMillisecondsSinceEpoch(_messages[i].time ?? 0);
-
-      return !latestAssistantTime.isAfter(currentMessageTime);
-    }
+    // bool isLatestAssistantMessage(int i) {
+    //   final latestAssistantIndex =
+    //       _messages.lastIndexWhere((m) => m.type == 'assistant');
+    //
+    //   if (latestAssistantIndex == -1) {
+    //     return true;
+    //   }
+    //
+    //   final latestAssistantTime = DateTime.fromMillisecondsSinceEpoch(
+    //       _messages[latestAssistantIndex].time ?? 0);
+    //   final currentMessageTime =
+    //       DateTime.fromMillisecondsSinceEpoch(_messages[i].time ?? 0);
+    //
+    //   return !latestAssistantTime.isAfter(currentMessageTime);
+    // }
 
     return Column(
       children: [
@@ -212,8 +211,8 @@ class _LLMChatState extends State<LLMChat> {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: LlmChatMessageItem(
-                    isLastMessage: _messages[i].type == 'assistant' &&
-                        isLatestAssistantMessage(i),
+                    // isLastMessage: _messages[i].type == 'assistant' &&
+                    //     isLatestAssistantMessage(i),
                     showSystemMessage: widget.showSystemMessage,
                     boxDecorationBasedOnMessage:
                         widget.boxDecorationBasedOnMessage,
@@ -322,7 +321,7 @@ class LlmChatMessageItem extends StatelessWidget {
     required this.message,
     required this.style,
     required this.showSystemMessage,
-    required this.isLastMessage,
+    // required this.isLastMessage,
   });
 
   final bool showSystemMessage;
@@ -330,7 +329,8 @@ class LlmChatMessageItem extends StatelessWidget {
   final LlmChatMessage message;
   final BoxDecoration Function(LlmChatMessage)? boxDecorationBasedOnMessage;
   final EdgeInsetsGeometry? messagePadding;
-  final bool isLastMessage;
+
+  // final bool isLastMessage;
 
   @override
   Widget build(BuildContext context) {
@@ -389,21 +389,10 @@ class LlmChatMessageItem extends StatelessWidget {
                           bottom: 8,
                           left: 0,
                           right: 0),
-                      child: isAssistant && isLastMessage
-                          ? DefaultTextStyle(
-                              style: style.assistantTextStyle ?? TextStyle(),
-                              child: AnimatedTextKit(
-                                isRepeatingAnimation: false,
-                                totalRepeatCount: 1,
-                                animatedTexts: [
-                                  TyperAnimatedText(message.message ?? '')
-                                ],
-                              ),
-                            )
-                          : SelectableText(
-                              style: _getTextStyle(),
-                              '${message.message}',
-                            ),
+                      child: SelectableText(
+                        style: _getTextStyle(),
+                        '${message.message}',
+                      ),
                     ),
                   ],
                 );
