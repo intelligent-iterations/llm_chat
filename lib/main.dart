@@ -90,12 +90,14 @@ class _Example extends StatefulWidget {
 }
 
 class _ExampleState extends State<_Example> {
-  final _chatStreamController = StreamController<LlmChatMessage>.broadcast();
+  final _chatStreamController =
+      StreamController<Map<String, dynamic>>.broadcast();
 
-  Stream<LlmChatMessage> get chatStream => _chatStreamController.stream;
+  Stream<Map<String, dynamic>> get chatStream => _chatStreamController.stream;
 
   void addMessageToStream(LlmChatMessage message) {
-    _chatStreamController.add(message);
+    chats.add(message);
+    _chatStreamController.add({'index': chats.length, 'message': message});
   }
 
   void dispose() {
@@ -167,7 +169,7 @@ class LLMChat extends StatefulWidget {
   final TextEditingController controller;
   final Function(String) onSubmit;
   final Widget? loadingWidget;
-  final StreamController<LlmChatMessage> chatStreamController;
+  final StreamController<Map<String, dynamic>> chatStreamController;
 
   @override
   State<LLMChat> createState() => _LLMChatState();
@@ -185,21 +187,18 @@ class _LLMChatState extends State<LLMChat> {
     return Column(
       children: [
         Expanded(
-          child: StreamBuilder<LlmChatMessage>(
+          child: StreamBuilder<Map<String, dynamic>>(
             stream: widget.chatStreamController.stream,
             builder: (context, snapshot) {
               if (snapshot.hasData) {
-                // Get the current message from the stream
-                LlmChatMessage updatedMessage = snapshot.data!;
+                Map<String, dynamic> data = snapshot.data ?? {};
+                int indexToUpdate = data['index'] as int? ?? -1;
+                LlmChatMessage updatedMessage =
+                    data['message'] as LlmChatMessage;
 
-                // Find the index of the assistant message that needs updating
-                int indexToUpdate = widget.messages.indexWhere(
-                  (message) =>
-                      message.type == 'assistant' && message.message == '',
-                );
-
-                if (indexToUpdate != -1) {
-                  // Update the message in the list
+                // Ensure that we have a valid index
+                if (indexToUpdate >= 0 &&
+                    indexToUpdate < widget.messages.length) {
                   setState(() {
                     widget.messages[indexToUpdate] = updatedMessage;
                   });
