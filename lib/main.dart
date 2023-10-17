@@ -396,8 +396,7 @@ class LlmChatMessageItem extends StatelessWidget {
                                 isRepeatingAnimation: false,
                                 totalRepeatCount: 1,
                                 animatedTexts: [
-                                  TyperAnimatedText(
-                                      message.message?.trim() ?? '')
+                                  TyperAnimatedText(message.message ?? '')
                                 ],
                               ),
                             )
