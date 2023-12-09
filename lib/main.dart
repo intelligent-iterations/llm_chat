@@ -130,6 +130,7 @@ class LLMChat extends StatefulWidget {
     this.messagePadding,
     this.chatPadding,
     this.loadingWidget,
+    this.hideInput,
     super.key,
   });
 
@@ -143,6 +144,8 @@ class LLMChat extends StatefulWidget {
 
   final List<LlmChatMessage> messages;
   final bool awaitingResponse;
+  final bool? hideInput;
+
   final Widget Function(LlmChatMessage message)? messageBuilder;
   final ScrollController? scrollController;
 
@@ -225,17 +228,19 @@ class _LLMChatState extends State<LLMChat> {
             },
           ),
         ),
-        LLmChatTextInput(
-          inputPadding: widget.style?.inputPadding,
-          background: widget.style?.inputBoxColor,
-          icon: widget.style?.sendIcon,
-          textStyle: widget.style?.inputTextStyle,
-          controller: widget.controller,
-          onSubmit: (text) {
-            widget.onSubmit(text);
-            widget.scrollController?.jumpTo(0);
-          },
-        ),
+        (widget.hideInput ?? false)
+            ? SizedBox()
+            : LLmChatTextInput(
+                inputPadding: widget.style?.inputPadding,
+                background: widget.style?.inputBoxColor,
+                icon: widget.style?.sendIcon,
+                textStyle: widget.style?.inputTextStyle,
+                controller: widget.controller,
+                onSubmit: (text) {
+                  widget.onSubmit(text);
+                  widget.scrollController?.jumpTo(0);
+                },
+              ),
       ],
     );
   }
