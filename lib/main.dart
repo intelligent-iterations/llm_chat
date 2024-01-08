@@ -361,6 +361,7 @@ class LlmChatMessageItem extends StatelessWidget {
       alignment:
           message.type == 'user' ? Alignment.bottomRight : Alignment.bottomLeft,
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
         mainAxisSize: MainAxisSize.min,
         children: [
           if (message.type == 'assistant' && style.assistantIcon != null)
