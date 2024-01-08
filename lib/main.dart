@@ -95,7 +95,9 @@ class _ExampleState extends State<_Example> {
         children: [
           Expanded(
             child: LLMChat(
-              style: LlmMessageStyle(
+              style: const LlmMessageStyle(
+                  assistantIcon: Icon(Icons.import_contacts_sharp),
+                  userIcon: Icon(Icons.usb),
                   assistantTextStyle: TextStyle(color: Colors.white),
                   userColor: Color(0xff9E9EA5),
                   assistantColor: Colors.deepPurple),
@@ -187,6 +189,7 @@ class _LLMChatState extends State<LLMChat> {
     return Column(
       children: [
         Expanded(
+          flex: 1,
           child: ListView.builder(
             reverse: true,
             itemCount: _messages.length + 1,
@@ -228,19 +231,20 @@ class _LLMChatState extends State<LLMChat> {
             },
           ),
         ),
-        (widget.hideInput ?? false)
-            ? SizedBox()
-            : LLmChatTextInput(
-                inputPadding: widget.style?.inputPadding,
-                background: widget.style?.inputBoxColor,
-                icon: widget.style?.sendIcon,
-                textStyle: widget.style?.inputTextStyle,
-                controller: widget.controller,
-                onSubmit: (text) {
-                  widget.onSubmit(text);
-                  widget.scrollController?.jumpTo(0);
-                },
-              ),
+        if (widget.hideInput ?? false)
+          SizedBox()
+        else
+          LLmChatTextInput(
+            inputPadding: widget.style?.inputPadding,
+            background: widget.style?.inputBoxColor,
+            icon: widget.style?.sendIcon,
+            textStyle: widget.style?.inputTextStyle,
+            controller: widget.controller,
+            onSubmit: (text) {
+              widget.onSubmit(text);
+              widget.scrollController?.jumpTo(0);
+            },
+          ),
       ],
     );
   }
@@ -356,55 +360,65 @@ class LlmChatMessageItem extends StatelessWidget {
     return Align(
       alignment:
           message.type == 'user' ? Alignment.bottomRight : Alignment.bottomLeft,
-      child: Container(
-        padding: messagePadding ??
-            EdgeInsets.only(top: 8, bottom: 12, left: 18, right: 18),
-        decoration: decoration,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (isSystem)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Text(
-                  'System',
-                  style: style.systemTextStyle,
-                ),
-              ),
-            Container(
-              // width: 500,
-              child: LayoutBuilder(builder: (context, constraints) {
-                return Stack(
-                  // crossAxisAlignment: CrossAxisAlignment.start,
-                  // mainAxisSize: MainAxisSize.min,
-                  fit: StackFit.loose,
-                  children: [
-                    if (isAssistant)
-                      Container(
-                        child: CopyToClipboardIcon(
-                          iconColor:
-                              style.assistantTextStyle?.color ?? Colors.black,
-                          textToCopy: message.message ?? '',
-                        ),
-                      ),
-                    if (isAssistant) SizedBox(height: 24),
-                    Container(
-                      padding: EdgeInsets.only(
-                          top: isAssistant ? 50 : 12,
-                          bottom: 8,
-                          left: 0,
-                          right: 0),
-                      child: SelectableText(
-                        style: _getTextStyle(),
-                        '${message.message}',
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (message.type == 'assistant' && style.assistantIcon != null)
+            style.assistantIcon!,
+          Expanded(
+            child: Container(
+              padding: messagePadding ??
+                  EdgeInsets.only(top: 8, bottom: 12, left: 18, right: 18),
+              decoration: decoration,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (isSystem)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Text(
+                        'System',
+                        style: style.systemTextStyle,
                       ),
                     ),
-                  ],
-                );
-              }),
+                  Container(
+                    // width: 500,
+                    child: LayoutBuilder(builder: (context, constraints) {
+                      return Stack(
+                        // crossAxisAlignment: CrossAxisAlignment.start,
+                        // mainAxisSize: MainAxisSize.min,
+                        fit: StackFit.loose,
+                        children: [
+                          if (isAssistant)
+                            Container(
+                              child: CopyToClipboardIcon(
+                                iconColor: style.assistantTextStyle?.color ??
+                                    Colors.black,
+                                textToCopy: message.message ?? '',
+                              ),
+                            ),
+                          if (isAssistant) SizedBox(height: 24),
+                          Container(
+                            padding: EdgeInsets.only(
+                                top: isAssistant ? 50 : 12,
+                                bottom: 8,
+                                left: 0,
+                                right: 0),
+                            child: SelectableText(
+                              style: _getTextStyle(),
+                              '${message.message}',
+                            ),
+                          ),
+                        ],
+                      );
+                    }),
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
+          ),
+          if (message.type == 'user' && style.userIcon != null) style.userIcon!,
+        ],
       ),
     );
   }
